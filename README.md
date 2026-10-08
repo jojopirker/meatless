@@ -6,6 +6,10 @@ The first version uses Node.js, plain browser JavaScript, and Cloudflare Tunnel.
 Guests can read the selected conversation. Enable writing to let them send
 messages with their name attached. An optional passphrase protects access.
 
+![Shared Codex conversation with an attributed collaborator message](docs/screenshot.png)
+
+Example conversation with collaborator messages enabled.
+
 ## Run it
 
 Requires Node.js 24+, an installed and authenticated `codex` or `claude` CLI,
