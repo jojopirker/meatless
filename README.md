@@ -13,7 +13,15 @@ and `cloudflared` when using `--tunnel`.
 
 ```sh
 npm install
+npm link
 brew install cloudflared
+
+# Paste a Codex desktop deep link. Starts the tunnel automatically.
+npx agent-share codex://threads/<session-id>
+
+# Add a passphrase, or allow messages.
+npx agent-share codex://threads/<session-id> --passphrase
+npx agent-share codex://threads/<session-id> --write --passphrase
 
 # Find an existing conversation.
 npm start -- list codex
@@ -32,20 +40,30 @@ npm start -- codex new --cwd /path/to/project --write --passphrase --tunnel
 npm start -- claude new --cwd /path/to/project --write --passphrase --tunnel
 ```
 
+`npm link` registers this checkout locally so `npx agent-share` uses this
+project from any directory. The npm registry name belongs to a different
+project; this package has not been published there.
+
+Deep links are read-only by default and automatically start a tunnel.
+Use `--local` to share only on localhost. Commands using `npm start` need the
+`--` separator shown above, so npm forwards flags such as `--tunnel`.
+
 `--passphrase` prompts without echoing the passphrase. Omit it for access by
 anyone with the URL. For non-interactive use, set `AGENT_SHARE_PASSPHRASE`.
 Passphrases stay in memory; authenticated browsers get a session cookie.
 Names are self-reported labels. Everyone with access has the same permissions.
 
-The command prints a local URL and, with `--tunnel`, a temporary public URL.
+The command prints a local URL and, for deep links or `--tunnel`, a temporary public URL.
 The tunnel uses HTTP/2; the chat streams updates over WebSockets.
-Without `--tunnel`, use the local URL to try the interface. The default port
+Use `--local` to try the interface without a public URL. The default port
 is 8787; override it with `--port`. Stop with Ctrl+C to end sharing. The laptop
 and sharing process must stay running.
 
 ## Codex
 
-Read-only sharing watches the saved conversation without resuming it.
+Read-only sharing watches the selected session's saved JSONL transcript
+without resuming it or starting another Codex runtime. New saved messages
+appear automatically while you keep working in the desktop app.
 With `--write`, the command resumes the conversation in its own app-server.
 Use the shared web page while sharing; continuing the same thread in the
 original desktop window or terminal would create two independent runtimes.

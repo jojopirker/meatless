@@ -13,6 +13,7 @@ import { startServer } from '../src/server.js';
 import { startTunnel } from '../src/tunnel.js';
 
 const help = `Usage:
+  agent-share codex://threads/<session-id> [options]
   agent-share list codex|claude [--cwd <directory>]
   agent-share codex <session-id>|new [options]
   agent-share claude <session-id>|new [options]
@@ -20,7 +21,8 @@ const help = `Usage:
 Options:
   --write          Let guests send attributed messages. Default: read-only.
   --passphrase     Prompt for a passphrase before starting.
-  --tunnel         Start a temporary Cloudflare Tunnel and print its URL.
+  --tunnel         Start a temporary Cloudflare Tunnel. Automatic for deep links.
+  --local          Use only localhost, without a tunnel.
   --port <port>    Local port. Default: 8787.
   --cwd <path>     Working directory for a new session or session listing.
   --connect <url>  Connect to a running Codex app-server WebSocket URL.
@@ -62,12 +64,22 @@ function approve(message) {
 async function main() {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: {
     write: { type: 'boolean', default: false }, passphrase: { type: 'boolean', default: false },
-    tunnel: { type: 'boolean', default: false }, help: { type: 'boolean', default: false },
+    tunnel: { type: 'boolean', default: false }, local: { type: 'boolean', default: false }, help: { type: 'boolean', default: false },
     port: { type: 'string', default: '8787' }, cwd: { type: 'string' }, connect: { type: 'string' }, model: { type: 'string' },
   } });
-  const [command, argument] = positionals;
+  let [command, argument] = positionals;
   if (values.help || !command) { console.error(help); return; }
+  const deepLink = command.startsWith('codex:') || argument?.startsWith('codex:');
+  if (deepLink) {
+    const link = new URL(command.startsWith('codex:') ? command : argument);
+    if (link.protocol !== 'codex:' || link.hostname !== 'threads' || !/^\/[0-9a-f-]{36}$/i.test(link.pathname)) {
+      throw new Error('Expected codex://threads/<session-id>.');
+    }
+    command = 'codex';
+    argument = link.pathname.slice(1);
+  }
   const options = { ...values, port: Number(values.port), cwd: resolve(values.cwd || process.cwd()) };
+  options.tunnel = !values.local && (values.tunnel || Boolean(deepLink));
   if (!Number.isInteger(options.port) || options.port < 1 || options.port > 65535) throw new Error('Port must be between 1 and 65535.');
   if (command === 'list') {
     if (!['codex', 'claude'].includes(argument)) throw new Error('Choose list codex or list claude.');
