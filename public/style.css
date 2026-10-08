@@ -26,10 +26,6 @@ h1 { text-wrap: balance; }
 .topbar { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 18px 32px; box-shadow: 0 1px 0 #2529220d; }
 .brand { display: flex; gap: 10px; align-items: center; color: inherit; text-decoration: none; font-size: 14px; font-weight: 600; min-height: 40px; }
 .brand-icon { display: grid; place-items: center; background: #e9eee5; color: var(--accent); width: 30px; height: 30px; border-radius: 8px; font: 600 14px monospace; }
-.connection { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
-.connection::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #a5aaa0; }
-.connection[data-state="live"]::before { background: #5e8d53; box-shadow: 0 0 0 3px #5e8d5315; }
-.connection[data-state="busy"]::before { background: #c18b33; }
 .chat { width: min(100%, 880px); margin: 0 auto; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .session-heading { padding: 30px 32px 20px; flex-shrink: 0; }
 .session-meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }

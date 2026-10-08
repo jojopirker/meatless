@@ -40,8 +40,6 @@ function render(next) {
   $('message-form').hidden = !state.write;
   $('readonly').hidden = state.write;
   $('session-error').textContent = state.error;
-  $('connection').textContent = !state.connected ? 'Agent disconnected' : state.busy ? 'Working' : 'Live session';
-  $('connection').dataset.state = !state.connected ? 'offline' : state.busy ? 'busy' : 'live';
   const transcript = $('transcript');
   const stickToBottom = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight < 100;
   const ids = new Set();
@@ -78,8 +76,6 @@ async function loadSession() {
   if (response.status === 401) {
     $('chat').hidden = true;
     $('gate').hidden = false;
-    $('connection').textContent = 'Passphrase required';
-    $('connection').dataset.state = 'offline';
     $('passphrase').focus();
     return;
   }
@@ -90,8 +86,6 @@ async function loadSession() {
   socket.addEventListener('message', (event) => render(JSON.parse(event.data)));
   socket.addEventListener('close', () => {
     online = false;
-    $('connection').textContent = 'Reconnecting…';
-    $('connection').dataset.state = 'offline';
     updateComposer();
     setTimeout(() => loadSession().catch(showError), 1500);
   });
