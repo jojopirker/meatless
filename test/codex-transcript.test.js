@@ -25,7 +25,7 @@ test('desktop Codex history includes conversation items and excludes private con
 });
 
 test('read-only Codex sharing loads the selected saved session and follows new messages', { timeout: 5000 }, async (t) => {
-  const root = await mkdtemp(join(tmpdir(), 'meat-proxy-codex-transcript-'));
+  const root = await mkdtemp(join(tmpdir(), 'meatless-codex-transcript-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const directory = join(root, '2026', '10', '08');
   await mkdir(directory, { recursive: true });

@@ -1,13 +1,13 @@
 {
-  "name": "meat-proxy",
+  "name": "meatless",
   "version": "0.1.0",
   "type": "module",
   "description": "Share a local Codex or Claude Code conversation with a coworker.",
   "bin": {
-    "meat-proxy": "bin/meat-proxy.js"
+    "meatless": "bin/meatless.js"
   },
   "scripts": {
-    "start": "node bin/meat-proxy.js",
+    "start": "node bin/meatless.js",
     "test": "node --test test/*.test.js"
   },
   "engines": {
@@ -28,10 +28,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jojopirker/meat-proxy.git"
+    "url": "git+https://github.com/jojopirker/meatless.git"
   },
   "bugs": {
-    "url": "https://github.com/jojopirker/meat-proxy/issues"
+    "url": "https://github.com/jojopirker/meatless/issues"
   },
-  "homepage": "https://github.com/jojopirker/meat-proxy#readme"
+  "homepage": "https://github.com/jojopirker/meatless#readme"
 }

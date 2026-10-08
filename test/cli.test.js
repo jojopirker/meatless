@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 test('a bare Codex deep link loads its history and starts a tunnel automatically', { timeout: 8000 }, async (t) => {
-  const directory = await mkdtemp(join(tmpdir(), 'meat-proxy-cli-'));
+  const directory = await mkdtemp(join(tmpdir(), 'meatless-cli-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const home = join(directory, 'codex');
   await mkdir(join(home, 'sessions'), { recursive: true });
@@ -31,9 +31,9 @@ setInterval(() => {}, 1000);
   await new Promise((resolve) => listener.listen(0, '127.0.0.1', resolve));
   const port = listener.address().port;
   await new Promise((resolve) => listener.close(resolve));
-  const child = spawn(process.execPath, [fileURLToPath(new URL('../bin/meat-proxy.js', import.meta.url)),
+  const child = spawn(process.execPath, [fileURLToPath(new URL('../bin/meatless.js', import.meta.url)),
     `codex://threads/${id}`, '--port', String(port)], { env: {
-      ...process.env, CODEX_HOME: home, MEAT_PROXY_PASSPHRASE: '',
+      ...process.env, CODEX_HOME: home, MEATLESS_PASSPHRASE: '',
       PATH: directory + ':' + process.env.PATH, TEST_TUNNEL_ARGS: argsPath,
     }, stdio: ['ignore', 'ignore', 'pipe'] });
   const exited = new Promise((resolve) => child.once('exit', resolve));

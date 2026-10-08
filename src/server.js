@@ -31,7 +31,7 @@ export async function startServer({ session, port = 8787, passphrase = '', write
     return { agent, id, title, messages, busy, connected, error, write };
   };
   const authenticated = (request) => !passphrase || tokens.has(
-    request.headers.cookie?.match(/(?:^|;\s*)meat_proxy=([a-f0-9]+)/)?.[1],
+    request.headers.cookie?.match(/(?:^|;\s*)meatless=([a-f0-9]+)/)?.[1],
   );
   const sameOrigin = (request) => !request.headers.origin
     || ['http', 'https'].some((scheme) => request.headers.origin === `${scheme}://${request.headers.host}`);
@@ -67,7 +67,7 @@ export async function startServer({ session, port = 8787, passphrase = '', write
       const token = randomBytes(32).toString('hex');
       tokens.add(token);
       const secure = request.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
-      response.setHeader('Set-Cookie', `meat_proxy=${token}; HttpOnly; SameSite=Strict; Path=/${secure}`);
+      response.setHeader('Set-Cookie', `meatless=${token}; HttpOnly; SameSite=Strict; Path=/${secure}`);
       return json(response, 200, { ok: true });
     }
     if (!authenticated(request)) return json(response, 401, { error: 'Enter the passphrase to join.' });

@@ -20,8 +20,8 @@ test('Claude history includes channel replies and ignores partial writes and sub
     { uuid: '2', type: 'assistant', message: { content: [{ type: 'thinking', thinking: 'Private' }, { type: 'text', text: 'An answer' }] } },
     { uuid: '3', type: 'user', message: { content: [{ type: 'tool_result', content: 'Sensitive output' }] } },
     { uuid: '4', type: 'assistant', isSidechain: true, message: { content: 'Subagent output' } },
-    { uuid: '5', type: 'assistant', message: { content: [{ type: 'tool_use', name: 'mcp__meat_proxy__reply', input: { text: 'A channel answer' } }] } },
-    { uuid: '6', type: 'user', isMeta: true, message: { content: '<channel source="meat_proxy" sender="Alex">\n[Shared-session message from Alex, collaborator]\n\nA follow-up\n</channel>' } },
+    { uuid: '5', type: 'assistant', message: { content: [{ type: 'tool_use', name: 'mcp__meatless__reply', input: { text: 'A channel answer' } }] } },
+    { uuid: '6', type: 'user', isMeta: true, message: { content: '<channel source="meatless" sender="Alex">\n[Shared-session message from Alex, collaborator]\n\nA follow-up\n</channel>' } },
     { uuid: '7', type: 'user', isMeta: true, message: { content: 'Private owner instructions' } },
     { type: 'custom-title', customTitle: 'A named session' },
   ];

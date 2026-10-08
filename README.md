@@ -1,4 +1,4 @@
-# meat-proxy
+# meatless
 
 Share one local Codex or Claude Code conversation through a small web chat.
 
@@ -12,16 +12,14 @@ Requires Node.js 24+, an installed and authenticated `codex` or `claude` CLI,
 and `cloudflared` when using `--tunnel`.
 
 ```sh
-npm install
-npm link
 brew install cloudflared
 
 # Paste a Codex desktop deep link. Starts the tunnel automatically.
-npx meat-proxy codex://threads/<session-id>
+npx meatless codex://threads/<session-id>
 
 # Add a passphrase, or allow messages.
-npx meat-proxy codex://threads/<session-id> --passphrase
-npx meat-proxy codex://threads/<session-id> --write --passphrase
+npx meatless codex://threads/<session-id> --passphrase
+npx meatless codex://threads/<session-id> --write --passphrase
 
 # Find an existing conversation.
 npm start -- list codex
@@ -40,15 +38,16 @@ npm start -- codex new --cwd /path/to/project --write --passphrase --tunnel
 npm start -- claude new --cwd /path/to/project --write --passphrase --tunnel
 ```
 
-`npm link` registers this checkout locally so `npx meat-proxy` uses this
-project from any directory while developing locally.
+For local development, run `npm install` and `npm link` in this checkout.
+This registers the `meatless` command locally. The `npm start` examples
+require running from the checkout.
 
 Deep links are read-only by default and automatically start a tunnel.
 Use `--local` to share only on localhost. Commands using `npm start` need the
 `--` separator shown above, so npm forwards flags such as `--tunnel`.
 
 `--passphrase` prompts without echoing the passphrase. Omit it for access by
-anyone with the URL. For non-interactive use, set `MEAT_PROXY_PASSPHRASE`.
+anyone with the URL. For non-interactive use, set `MEATLESS_PASSPHRASE`.
 Passphrases stay in memory; authenticated browsers get a session cookie.
 Names are self-reported labels. Everyone with access has the same permissions.
 
