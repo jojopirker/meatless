@@ -8,7 +8,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
 test('Claude channel sends attributed notifications and delivers replies through the real MCP transport', async (t) => {
-  const root = await mkdtemp(join(tmpdir(), 'agent-share-channel-'));
+  const root = await mkdtemp(join(tmpdir(), 'meat-proxy-channel-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'project'));
   const id = '12345678-1234-1234-1234-123456789abc';

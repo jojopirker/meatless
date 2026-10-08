@@ -56,7 +56,7 @@ export function connectCodex(endpoint) {
       connection.once('error', reject);
     });
     await rpc.request('initialize', {
-      clientInfo: { name: 'agent_share', title: 'agent-share', version: '0.1.0' },
+      clientInfo: { name: 'meat_proxy', title: 'meat-proxy', version: '0.1.0' },
     });
     rpc.write({ method: 'initialized' });
   };

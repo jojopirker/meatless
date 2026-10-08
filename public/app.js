@@ -4,8 +4,8 @@ let online = false;
 let sending = false;
 let socket;
 const elements = new Map();
-$('name').value = localStorage.getItem('agent-share-name') || '';
-$('name').addEventListener('change', () => localStorage.setItem('agent-share-name', $('name').value));
+$('name').value = localStorage.getItem('meat-proxy-name') || '';
+$('name').addEventListener('change', () => localStorage.setItem('meat-proxy-name', $('name').value));
 
 function updateComposer() {
   $('send').disabled = !online || !state?.connected || state.busy || sending;
@@ -31,7 +31,7 @@ function render(next) {
   $('gate').hidden = true;
   $('chat').hidden = false;
   $('title').textContent = state.title;
-  document.title = `${state.title} · agent-share`;
+  document.title = `${state.title} · meat-proxy`;
   $('count').textContent = `${state.messages.length} messages`;
   $('message-form').hidden = !state.write;
   $('readonly').hidden = state.write;
@@ -116,7 +116,7 @@ $('message-form').addEventListener('submit', (event) => {
     const body = await response.json();
     if (!response.ok) throw new Error(body.error);
     if ($('message').value === text) $('message').value = '';
-    localStorage.setItem('agent-share-name', $('name').value);
+    localStorage.setItem('meat-proxy-name', $('name').value);
     $('message').focus();
     $('transcript').scrollTop = $('transcript').scrollHeight;
   }).catch(showError).finally(() => { sending = false; updateComposer(); });

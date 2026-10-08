@@ -13,10 +13,10 @@ import { startServer } from '../src/server.js';
 import { startTunnel } from '../src/tunnel.js';
 
 const help = `Usage:
-  agent-share codex://threads/<session-id> [options]
-  agent-share list codex|claude [--cwd <directory>]
-  agent-share codex <session-id>|new [options]
-  agent-share claude <session-id>|new [options]
+  meat-proxy codex://threads/<session-id> [options]
+  meat-proxy list codex|claude [--cwd <directory>]
+  meat-proxy codex <session-id>|new [options]
+  meat-proxy claude <session-id>|new [options]
 
 Options:
   --write          Let guests send attributed messages. Default: read-only.
@@ -29,7 +29,7 @@ Options:
   --model <name>   Override the Codex model for this session.
   --help          Show this help.
 
-Set AGENT_SHARE_PASSPHRASE instead of --passphrase for non-interactive use.
+Set MEAT_PROXY_PASSPHRASE instead of --passphrase for non-interactive use.
 Codex: use --connect for a live server. Otherwise, --write resumes the session
 in this process; use the shared page instead of the original Codex window.
 Claude: read-only sharing watches the existing transcript. With --write,
@@ -38,7 +38,7 @@ sharing channel enabled. Tool approvals remain in your terminal.
 `;
 
 async function ask(question, secret = false) {
-  if (!process.stdin.isTTY) throw new Error('A terminal is required for this prompt. Use AGENT_SHARE_PASSPHRASE for a passphrase.');
+  if (!process.stdin.isTTY) throw new Error('A terminal is required for this prompt. Use MEAT_PROXY_PASSPHRASE for a passphrase.');
   console.error(question);
   const output = secret ? new Writable({ write(_chunk, _encoding, done) { done(); } }) : process.stderr;
   const input = createInterface({ input: process.stdin, output, terminal: true });
@@ -89,13 +89,13 @@ async function main() {
     for (const session of sessions.filter((entry) => !values.cwd || entry.cwd === options.cwd)) {
       console.log(`${session.id}  ${session.title.replace(/\s+/g, ' ').slice(0, 90)}\n  ${session.cwd}`);
     }
-    if (!sessions.length) console.error('No sessions found. Start one with: agent-share ' + argument + ' new --write');
+    if (!sessions.length) console.error('No sessions found. Start one with: meat-proxy ' + argument + ' new --write');
     return;
   }
   if (!['codex', 'claude', 'claude-channel'].includes(command) || !argument) throw new Error(help);
   options.id = argument === 'new' && command !== 'codex' ? randomUUID() : argument;
   if (argument === 'new' && !options.write) throw new Error('Use --write when starting a new session.');
-  let passphrase = process.env.AGENT_SHARE_PASSPHRASE || '';
+  let passphrase = process.env.MEAT_PROXY_PASSPHRASE || '';
   if (values.passphrase) {
     passphrase = await ask('Passphrase:', true);
     if (!passphrase) throw new Error('The passphrase cannot be empty.');
@@ -104,21 +104,21 @@ async function main() {
   if (command === 'claude') {
     if (argument !== 'new') {
       const path = claudeSessionFiles().find((file) => file.endsWith(`/${argument}.jsonl`));
-      if (!path) throw new Error('Claude session not found. Run: agent-share list claude');
+      if (!path) throw new Error('Claude session not found. Run: meat-proxy list claude');
       options.cwd = values.cwd ? options.cwd : claudeMessages(await readFile(path, 'utf8')).cwd;
     }
   }
   if (command === 'claude' && options.write) {
     const channelArgs = [fileURLToPath(import.meta.url), 'claude-channel', options.id, '--port', String(options.port), '--cwd', options.cwd];
     if (options.write) channelArgs.push('--write');
-    const config = JSON.stringify({ mcpServers: { agent_share: { command: process.execPath, args: channelArgs } } });
+    const config = JSON.stringify({ mcpServers: { meat_proxy: { command: process.execPath, args: channelArgs } } });
     const args = [argument === 'new' ? '--session-id' : '--resume', options.id, '--mcp-config', config,
-      '--dangerously-load-development-channels', 'server:agent_share', '--allowedTools', 'mcp__agent_share__reply'];
+      '--dangerously-load-development-channels', 'server:meat_proxy', '--allowedTools', 'mcp__meat_proxy__reply'];
     const localURL = `http://127.0.0.1:${options.port}`;
     console.error(`\nLocal URL: ${localURL}\nSession: ${options.id}\n`);
     const tunnel = options.tunnel ? await startTunnel(localURL) : undefined;
     console.error('Starting Claude with the sharing channel. Accept its development-channel prompt to connect.');
-    const child = spawn('claude', args, { cwd: options.cwd, stdio: 'inherit', env: { ...process.env, AGENT_SHARE_PASSPHRASE: passphrase } });
+    const child = spawn('claude', args, { cwd: options.cwd, stdio: 'inherit', env: { ...process.env, MEAT_PROXY_PASSPHRASE: passphrase } });
     child.once('error', (error) => { tunnel?.close(); console.error(error.message); process.exitCode = 1; });
     child.once('exit', (code) => { tunnel?.close(); process.exitCode = code || 0; });
     process.once('SIGTERM', () => { child.kill('SIGTERM'); tunnel?.close(); });
@@ -148,4 +148,4 @@ async function main() {
   session.once('end', close);
 }
 
-main().catch((error) => { console.error(`agent-share: ${error.message}`); process.exitCode = 1; });
+main().catch((error) => { console.error(`meat-proxy: ${error.message}`); process.exitCode = 1; });

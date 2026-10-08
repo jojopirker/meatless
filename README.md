@@ -1,4 +1,4 @@
-# agent-share
+# meat-proxy
 
 Share one local Codex or Claude Code conversation through a small web chat.
 
@@ -17,11 +17,11 @@ npm link
 brew install cloudflared
 
 # Paste a Codex desktop deep link. Starts the tunnel automatically.
-npx agent-share codex://threads/<session-id>
+npx meat-proxy codex://threads/<session-id>
 
 # Add a passphrase, or allow messages.
-npx agent-share codex://threads/<session-id> --passphrase
-npx agent-share codex://threads/<session-id> --write --passphrase
+npx meat-proxy codex://threads/<session-id> --passphrase
+npx meat-proxy codex://threads/<session-id> --write --passphrase
 
 # Find an existing conversation.
 npm start -- list codex
@@ -40,16 +40,15 @@ npm start -- codex new --cwd /path/to/project --write --passphrase --tunnel
 npm start -- claude new --cwd /path/to/project --write --passphrase --tunnel
 ```
 
-`npm link` registers this checkout locally so `npx agent-share` uses this
-project from any directory. The npm registry name belongs to a different
-project; this package has not been published there.
+`npm link` registers this checkout locally so `npx meat-proxy` uses this
+project from any directory while developing locally.
 
 Deep links are read-only by default and automatically start a tunnel.
 Use `--local` to share only on localhost. Commands using `npm start` need the
 `--` separator shown above, so npm forwards flags such as `--tunnel`.
 
 `--passphrase` prompts without echoing the passphrase. Omit it for access by
-anyone with the URL. For non-interactive use, set `AGENT_SHARE_PASSPHRASE`.
+anyone with the URL. For non-interactive use, set `MEAT_PROXY_PASSPHRASE`.
 Passphrases stay in memory; authenticated browsers get a session cookie.
 Names are self-reported labels. Everyone with access has the same permissions.
 
