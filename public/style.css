@@ -1,0 +1,84 @@
+:root {
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #252922;
+  background: #fafbf8;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  --muted: #72786d;
+  --accent: #3e613b;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; height: 100dvh; display: flex; flex-direction: column; }
+button, input, textarea { font: inherit; }
+button, input, textarea, a { -webkit-tap-highlight-color: transparent; }
+button { min-height: 42px; padding: 0 18px; border: 0; border-radius: 10px; color: white; background: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 150ms, scale 150ms, opacity 150ms; }
+button:hover { background: #2d4e2b; }
+button:active { scale: .96; }
+button:disabled { opacity: .4; cursor: default; }
+button span { padding-left: 12px; }
+button:focus-visible, a:focus-visible, .transcript:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+input, textarea { color: inherit; outline: none; }
+input:focus, textarea:focus { box-shadow: 0 0 0 2px #5b835b; }
+p { text-wrap: pretty; }
+h1 { text-wrap: balance; }
+.topbar { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; padding: 18px 32px; box-shadow: 0 1px 0 #2529220d; }
+.brand { display: flex; gap: 10px; align-items: center; color: inherit; text-decoration: none; font-size: 14px; font-weight: 600; min-height: 40px; }
+.brand-icon { display: grid; place-items: center; background: #e9eee5; color: var(--accent); width: 30px; height: 30px; border-radius: 8px; font: 600 14px monospace; }
+.connection { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+.connection::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #a5aaa0; }
+.connection[data-state="live"]::before { background: #5e8d53; box-shadow: 0 0 0 3px #5e8d5315; }
+.connection[data-state="busy"]::before { background: #c18b33; }
+.chat { width: min(100%, 880px); margin: 0 auto; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.session-heading { padding: 30px 32px 20px; flex-shrink: 0; }
+.session-meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+.eyebrow { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--accent); }
+.separator { color: #c8cec0; }
+.session-heading h1 { font-size: clamp(21px, 3vw, 28px); font-weight: 500; line-height: 1.3; letter-spacing: -.035em; margin: 12px 0 10px; overflow-wrap: anywhere; }
+.session-details { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 11px; }
+#directory { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#count { white-space: nowrap; }
+.transcript { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 32px 28px; scrollbar-width: thin; scrollbar-color: #d9dfd2 transparent; }
+.messages { display: flex; flex-direction: column; gap: 26px; }
+.message { max-width: 100%; }
+.message-author { margin-bottom: 7px; font-size: 11px; font-weight: 600; color: var(--muted); }
+.message-body { font-size: 14px; line-height: 1.75; overflow-wrap: anywhere; white-space: pre-wrap; }
+.message-body pre { background: #eef1e9; border-radius: 10px; padding: 16px; overflow: auto; white-space: pre; font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; margin: 14px 0; }
+.message[data-role="user"] { align-self: flex-end; max-width: 92%; background: #edf1e8; padding: 15px 18px; border-radius: 16px 16px 4px 16px; }
+.message[data-role="user"] .message-author { color: #68725f; }
+.message[data-role="user"] .message-body pre { background: #e2e8dc; }
+.empty { display: grid; place-content: center; text-align: center; min-height: 180px; color: var(--muted); font-size: 13px; }
+.empty-mark { font-size: 30px; color: #bac7ae; }
+.composer-area { padding: 12px 32px 20px; flex-shrink: 0; }
+.composer { border-radius: 16px; background: #fff; padding: 6px; box-shadow: 0 0 0 1px #25292214, 0 4px 12px #25292206; }
+.composer textarea { display: block; width: 100%; background: transparent; border: 0; border-radius: 10px; padding: 12px; resize: vertical; min-height: 68px; max-height: 200px; font-size: 14px; line-height: 1.6; }
+.composer textarea::placeholder { color: #949b8d; }
+.composer-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 4px 10px; gap: 12px; }
+.identity { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.identity label { font-size: 11px; white-space: nowrap; color: var(--muted); }
+.identity input { width: 130px; min-width: 0; min-height: 40px; padding: 5px 7px; border: 0; background: #f6f8f3; border-radius: 6px; font-size: 12px; }
+.composer-note { font-size: 11px; color: var(--muted); margin: 10px 0 0; min-height: 14px; }
+.readonly { color: var(--muted); font-size: 12px; text-align: center; padding: 14px 0 0; box-shadow: 0 -1px 0 #2529220d; }
+.error { color: #a34435; font-size: 12px; line-height: 1.5; }
+.error:empty { display: none; }
+.gate { flex: 1; display: grid; place-items: center; padding: 32px; }
+.join-card { width: min(100%, 360px); }
+.join-card h1 { font-weight: 500; font-size: 30px; letter-spacing: -.04em; margin-bottom: 12px; }
+.join-card p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+.join-card label { display: block; font-size: 12px; margin-bottom: 8px; }
+.join-card input { width: 100%; min-height: 46px; border: 1px solid #dce2d5; border-radius: 10px; padding: 10px 12px; background: white; }
+.join-card button { margin-top: 14px; width: 100%; min-height: 46px; }
+.join-card .error { color: #a34435; margin-top: 12px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 600px) {
+  .topbar { padding: 10px 18px; }
+  .session-heading { padding: 22px 18px 16px; }
+  .transcript { padding: 10px 18px 22px; }
+  .composer-area { padding: 8px 14px 14px; }
+  .session-details { font-size: 10px; }
+  .identity label { display: none; }
+  .identity input { width: 120px; }
+  .message[data-role="user"] { max-width: 96%; }
+}
+@media (prefers-reduced-motion: reduce) { button { transition: none; } button:active { scale: 1; } }
