@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { connectCodex } from './rpc.js';
+import { openCodexTranscript } from './codex-transcript.js';
 
 const isContext = (text) => /^(# AGENTS\.md instructions\b|<user_instructions>|<environment_context>)/.test(text.trimStart());
 
@@ -28,6 +29,7 @@ export async function listCodexSessions({ connect, cwd } = {}) {
 }
 
 export async function openCodex({ id, cwd, write, connect, approve, model }) {
+  if (!write && !connect) return openCodexTranscript({ id });
   const session = new EventEmitter();
   const rpc = connectCodex(connect);
   const state = { agent: 'Codex', id, title: 'Codex session', cwd: '', messages: [], busy: false, connected: true, error: '' };
