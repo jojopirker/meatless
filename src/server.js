@@ -26,7 +26,10 @@ export async function startServer({ session, port = 8787, passphrase = '', write
   const files = new Map(await Promise.all([...assets].map(async ([path, [file, contentType]]) => [
     path, { contentType, body: await readFile(new URL(`../public/${file}`, import.meta.url)) },
   ])));
-  const snapshot = () => ({ ...session.state, write });
+  const snapshot = () => {
+    const { agent, id, title, messages, busy, connected, error } = session.state;
+    return { agent, id, title, messages, busy, connected, error, write };
+  };
   const authenticated = (request) => !passphrase || tokens.has(
     request.headers.cookie?.match(/(?:^|;\s*)agent_share=([a-f0-9]+)/)?.[1],
   );

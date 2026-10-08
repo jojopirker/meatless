@@ -32,8 +32,6 @@ function render(next) {
   $('chat').hidden = false;
   $('title').textContent = state.title;
   document.title = `${state.title} · agent-share`;
-  $('directory').textContent = state.cwd;
-  $('directory').title = state.cwd;
   $('count').textContent = `${state.messages.length} messages`;
   $('message-form').hidden = !state.write;
   $('readonly').hidden = state.write;

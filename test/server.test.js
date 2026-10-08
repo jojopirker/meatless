@@ -37,10 +37,14 @@ test('passphrase gates history, sending, and WebSocket updates', async (t) => {
   const cookie = login.headers.get('set-cookie').split(';')[0];
   assert.match(login.headers.get('set-cookie'), /HttpOnly; SameSite=Strict/);
   const history = await request('/api/session', undefined, { Cookie: cookie });
-  assert.equal((await history.json()).id, 'selected-session');
+  const snapshot = await history.json();
+  assert.equal(snapshot.id, 'selected-session');
+  assert.equal(Object.hasOwn(snapshot, 'cwd'), false);
   const client = new WebSocket(server.url.replace('http:', 'ws:') + '/events', { headers: { Cookie: cookie } });
   const [message] = await once(client, 'message');
-  assert.equal(JSON.parse(message).messages[0].text, 'Hello, collaborator.');
+  const live = JSON.parse(message);
+  assert.equal(live.messages[0].text, 'Hello, collaborator.');
+  assert.equal(Object.hasOwn(live, 'cwd'), false);
   client.terminate();
 });
 
@@ -94,6 +98,9 @@ test('WebSocket clients receive subsequent transcript changes', async (t) => {
   session.state.messages.push({ id: '2', role: 'user', text: 'A follow-up' });
   session.emit('change');
   const [message] = await update;
-  assert.equal(JSON.parse(message).messages.at(-1).text, 'A follow-up');
+  const snapshot = JSON.parse(message);
+  assert.equal(snapshot.messages.at(-1).text, 'A follow-up');
+  assert.equal(Object.hasOwn(snapshot, 'cwd'), false);
+  assert.equal(session.state.cwd, '/example');
   client.terminate();
 });
