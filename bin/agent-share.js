@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listCodexSessions, openCodex } from '../src/codex.js';
-import { claudeSessionFiles, claudeMessages, listClaudeSessions, openClaudeChannel } from '../src/claude.js';
+import { claudeSessionFiles, claudeMessages, listClaudeSessions, openClaudeChannel, openClaudeTranscript } from '../src/claude.js';
 import { readFile } from 'node:fs/promises';
 import { startServer } from '../src/server.js';
 import { startTunnel } from '../src/tunnel.js';
@@ -23,14 +23,16 @@ Options:
   --tunnel         Start a temporary Cloudflare Tunnel and print its URL.
   --port <port>    Local port. Default: 8787.
   --cwd <path>     Working directory for a new session or session listing.
-  --socket <path>  Connect to a running Codex app-server control socket.
+  --connect <url>  Connect to a running Codex app-server WebSocket URL.
+  --model <name>   Override the Codex model for this session.
   --help          Show this help.
 
 Set AGENT_SHARE_PASSPHRASE instead of --passphrase for non-interactive use.
-Codex: use --socket for a live server. Otherwise, --write resumes the session
+Codex: use --connect for a live server. Otherwise, --write resumes the session
 in this process; use the shared page instead of the original Codex window.
-Claude: resumes the conversation with the sharing channel enabled. Close the
-original Claude session first. Tool approvals remain in your terminal.
+Claude: read-only sharing watches the existing transcript. With --write,
+close the original Claude session first; this command resumes it with the
+sharing channel enabled. Tool approvals remain in your terminal.
 `;
 
 async function ask(question, secret = false) {
@@ -43,7 +45,7 @@ async function ask(question, secret = false) {
 
 let approvalQueue = Promise.resolve();
 function approve(message) {
-  approvalQueue = approvalQueue.then(async () => {
+  const result = approvalQueue.then(async () => {
     if (['item/commandExecution/requestApproval', 'item/fileChange/requestApproval'].includes(message.method)) {
       console.error(`\nCodex requests approval: ${message.params.command || message.params.reason || message.method}`);
       const answer = process.stdin.isTTY ? await ask('Approve? [y/N]') : 'n';
@@ -53,14 +55,15 @@ function approve(message) {
     if (message.method === 'mcpServer/elicitation/request') return { action: 'decline', content: null };
     throw new Error(`This version cannot answer ${message.method}. Continue that action in Codex.`);
   });
-  return approvalQueue;
+  approvalQueue = result.catch(() => {}); // One unsupported prompt must not block later approvals.
+  return result;
 }
 
 async function main() {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: {
     write: { type: 'boolean', default: false }, passphrase: { type: 'boolean', default: false },
     tunnel: { type: 'boolean', default: false }, help: { type: 'boolean', default: false },
-    port: { type: 'string', default: '8787' }, cwd: { type: 'string' }, socket: { type: 'string' },
+    port: { type: 'string', default: '8787' }, cwd: { type: 'string' }, connect: { type: 'string' }, model: { type: 'string' },
   } });
   const [command, argument] = positionals;
   if (values.help || !command) { console.error(help); return; }
@@ -69,7 +72,7 @@ async function main() {
   if (command === 'list') {
     if (!['codex', 'claude'].includes(argument)) throw new Error('Choose list codex or list claude.');
     const sessions = argument === 'codex'
-      ? await listCodexSessions({ socket: options.socket, cwd: values.cwd && options.cwd })
+      ? await listCodexSessions({ connect: options.connect, cwd: values.cwd && options.cwd })
       : await listClaudeSessions();
     for (const session of sessions.filter((entry) => !values.cwd || entry.cwd === options.cwd)) {
       console.log(`${session.id}  ${session.title.replace(/\s+/g, ' ').slice(0, 90)}\n  ${session.cwd}`);
@@ -92,22 +95,26 @@ async function main() {
       if (!path) throw new Error('Claude session not found. Run: agent-share list claude');
       options.cwd = values.cwd ? options.cwd : claudeMessages(await readFile(path, 'utf8')).cwd;
     }
+  }
+  if (command === 'claude' && options.write) {
     const channelArgs = [fileURLToPath(import.meta.url), 'claude-channel', options.id, '--port', String(options.port), '--cwd', options.cwd];
     if (options.write) channelArgs.push('--write');
-    if (options.tunnel) channelArgs.push('--tunnel');
     const config = JSON.stringify({ mcpServers: { agent_share: { command: process.execPath, args: channelArgs } } });
     const args = [argument === 'new' ? '--session-id' : '--resume', options.id, '--mcp-config', config,
       '--dangerously-load-development-channels', 'server:agent_share', '--allowedTools', 'mcp__agent_share__reply'];
+    const localURL = `http://127.0.0.1:${options.port}`;
+    console.error(`\nLocal URL: ${localURL}\nSession: ${options.id}\n`);
+    const tunnel = options.tunnel ? await startTunnel(localURL) : undefined;
     console.error('Starting Claude with the sharing channel. Accept its development-channel prompt to connect.');
     const child = spawn('claude', args, { cwd: options.cwd, stdio: 'inherit', env: { ...process.env, AGENT_SHARE_PASSPHRASE: passphrase } });
-    child.once('error', (error) => { console.error(error.message); process.exitCode = 1; });
-    child.once('exit', (code) => { process.exitCode = code || 0; });
+    child.once('error', (error) => { tunnel?.close(); console.error(error.message); process.exitCode = 1; });
+    child.once('exit', (code) => { tunnel?.close(); process.exitCode = code || 0; });
+    process.once('SIGTERM', () => { child.kill('SIGTERM'); tunnel?.close(); });
     return;
   }
 
-  const session = command === 'codex'
-    ? await openCodex({ ...options, approve })
-    : await openClaudeChannel(options);
+  const session = command === 'codex' ? await openCodex({ ...options, approve })
+    : command === 'claude' ? await openClaudeTranscript(options) : await openClaudeChannel(options);
   const server = await startServer({ ...options, session, passphrase }).catch((error) => {
     session.close(); throw error;
   });

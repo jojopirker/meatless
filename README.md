@@ -38,6 +38,7 @@ Passphrases stay in memory; authenticated browsers get a session cookie.
 Names are self-reported labels. Everyone with access has the same permissions.
 
 The command prints a local URL and, with `--tunnel`, a temporary public URL.
+The tunnel uses HTTP/2; the chat streams updates over WebSockets.
 Without `--tunnel`, use the local URL to try the interface. The default port
 is 8787; override it with `--port`. Stop with Ctrl+C to end sharing. The laptop
 and sharing process must stay running.
@@ -50,6 +51,8 @@ Use the shared web page while sharing; continuing the same thread in the
 original desktop window or terminal would create two independent runtimes.
 Command and file-change approval requests appear in the sharing terminal.
 Unsupported approval types are declined. Existing sandbox settings still apply.
+The model comes from your Codex configuration; use `--model <name>` to override
+it for the shared session.
 
 To share one running app-server with a terminal and the web page, start it
 explicitly on localhost:
@@ -98,8 +101,9 @@ This version does not claim delivery confirmation for channel notifications.
 npm test
 ```
 
-The tests exercise access control, WebSocket updates, transcript filtering,
-and the Claude channel over a real MCP transport, without calling a model.
+The tests exercise access control, WebSocket updates, Codex JSON-RPC streaming,
+transcript filtering, and the Claude channel over a real MCP transport,
+without calling a model.
 
 Protocol references: [Codex app-server](https://learn.chatgpt.com/docs/app-server),
 [Claude channels](https://code.claude.com/docs/en/channels-reference),
