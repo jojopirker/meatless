@@ -28,10 +28,7 @@ h1 { text-wrap: balance; }
 .brand-icon { display: grid; place-items: center; background: #e9eee5; color: var(--accent); width: 30px; height: 30px; border-radius: 8px; font: 600 14px monospace; }
 .chat { width: min(100%, 880px); margin: 0 auto; flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .session-heading { padding: 30px 32px 20px; flex-shrink: 0; }
-.session-meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
-.eyebrow { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--accent); }
-.separator { color: #c8cec0; }
-.session-heading h1 { font-size: clamp(21px, 3vw, 28px); font-weight: 500; line-height: 1.3; letter-spacing: -.035em; margin: 12px 0 10px; overflow-wrap: anywhere; }
+.session-heading h1 { font-size: clamp(21px, 3vw, 28px); font-weight: 500; line-height: 1.3; letter-spacing: -.035em; margin: 0 0 10px; overflow-wrap: anywhere; }
 .session-details { display: flex; justify-content: space-between; gap: 16px; color: var(--muted); font-size: 11px; }
 #directory { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #count { white-space: nowrap; }

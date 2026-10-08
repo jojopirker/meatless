@@ -30,13 +30,11 @@ function render(next) {
   state = next;
   $('gate').hidden = true;
   $('chat').hidden = false;
-  $('agent').textContent = state.agent;
   $('title').textContent = state.title;
   document.title = `${state.title} · agent-share`;
   $('directory').textContent = state.cwd;
   $('directory').title = state.cwd;
   $('count').textContent = `${state.messages.length} messages`;
-  $('mode').textContent = state.write ? 'Read & contribute' : 'Read-only';
   $('message-form').hidden = !state.write;
   $('readonly').hidden = state.write;
   $('session-error').textContent = state.error;
