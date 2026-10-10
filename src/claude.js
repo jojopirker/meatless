@@ -5,6 +5,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { toolMessage, toolText } from './tool-messages.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
 export const claudeRoot = join(process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude'), 'projects');
@@ -21,19 +22,42 @@ export function claudeMessages(contents) {
   // A writer may still be appending the final JSON line.
   const lines = contents.slice(0, contents.lastIndexOf('\n')).split('\n').filter(Boolean);
   const records = lines.map((line) => JSON.parse(line));
-  const messages = records.flatMap((record) => {
-    if (!['user', 'assistant'].includes(record.type) || record.isSidechain) return [];
+  const messages = [];
+  const tools = new Map();
+  for (const record of records) {
+    if (!['user', 'assistant'].includes(record.type) || record.isSidechain) continue;
     const content = record.message?.content;
     const channel = typeof content === 'string' && content.match(/^<channel source="meatless"[^>]*>\n([\s\S]*)\n<\/channel>$/);
-    if (record.isMeta && !channel) return [];
+    if (record.isMeta && !channel) continue;
     const parts = typeof content === 'string' ? [{ type: 'text', text: channel ? channel[1] : content }] : content ?? [];
-    const text = parts.flatMap((part) => {
-      if (part.type === 'text') return [part.text];
-      if (part.type === 'tool_use' && part.name === 'mcp__meatless__reply') return [part.input.text];
-      return [];
-    }).join('\n');
-    return text ? [{ id: record.uuid, role: record.type, text }] : [];
-  });
+    let text = [];
+    let segment = 0;
+    const flushText = () => {
+      if (!text.length) return;
+      const id = segment === 0 ? record.uuid : `${record.uuid}:${segment}`;
+      messages.push({ id, role: record.type, text: text.join('\n') });
+      segment++;
+      text = [];
+    };
+    for (const part of parts) {
+      if (part.type === 'text') text.push(part.text);
+      if (part.type === 'tool_use' && part.name === 'mcp__meatless__reply') {
+        text.push(part.input.text);
+      } else if (part.type === 'tool_use') {
+        flushText();
+        const tool = toolMessage(part.id, part.name, 'inProgress', part.input);
+        tools.set(part.id, tool);
+        messages.push(tool);
+      } else if (part.type === 'tool_result') {
+        const tool = tools.get(part.tool_use_id);
+        if (tool) {
+          tool.status = part.is_error ? 'failed' : 'completed';
+          tool.output = typeof part.content === 'string' ? part.content : toolText(part.content);
+        }
+      }
+    }
+    flushText();
+  }
   const title = records.findLast((record) => record.type === 'custom-title')?.customTitle
     || messages.find((message) => message.role === 'user')?.text.slice(0, 100) || 'Claude Code session';
   const cwd = records.find((record) => record.cwd)?.cwd || '';

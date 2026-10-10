@@ -113,7 +113,12 @@ This version does not claim delivery confirmation for channel notifications.
 - Guest messages include their name and a collaborator label.
 - Codex sends one turn at a time. Claude queues channel messages itself.
 - The page shows user and assistant text, including Claude channel replies.
-  Reasoning, command outputs, and tool results are omitted.
+  Tool calls appear as collapsed rows with their status; expand a row to read
+  its input and text output. Codex command execution, file changes, MCP calls,
+  dynamic tools, and web searches are supported, along with Claude tool calls.
+  Tool inputs and outputs are shared with everyone who can access the page.
+  Reasoning, owner context, and tool-result images are omitted. Approvals stay
+  in the owner's terminal.
 - No database or hosted backend. Codex and Claude retain their own transcripts.
 - No attachments, account system, or session branching.
 

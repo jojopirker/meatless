@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { connectCodex } from './rpc.js';
 import { openCodexTranscript } from './codex-transcript.js';
+import { codexTool } from './tool-messages.js';
 
 const isContext = (text) => /^(# AGENTS\.md instructions\b|<user_instructions>|<environment_context>)/.test(text.trimStart());
 
@@ -9,10 +10,11 @@ function conversationItem(item) {
     const text = item.content.filter((part) => part.type === 'text').map((part) => part.text).join('\n');
     return text && !isContext(text) ? [{ id: item.id, role: 'user', text }] : [];
   }
-  if (item.type === 'agentMessage' && item.text) {
+  if (item.type === 'agentMessage' && item.phase !== 'analysis' && item.text) {
     return [{ id: item.id, role: 'assistant', text: item.text }];
   }
-  return [];
+  const tool = codexTool(item);
+  return tool ? [tool] : [];
 }
 
 export function codexMessages(thread) {
@@ -78,12 +80,18 @@ export async function openCodex({ id, cwd, write, connect, approve, model }) {
       item.text += params.delta;
       changed();
     }
-    if (method === 'item/started' && params.item.type === 'userMessage') {
-      const [message] = conversationItem(params.item);
-      if (message && !state.messages.some((entry) => entry.id === message.id)) {
-        state.messages.push(message);
-      }
+    if (method === 'item/started' || method === 'item/completed') {
+      const [message] = conversationItem(params.item.type === 'webSearch'
+        ? { ...params.item, status: method === 'item/started' ? 'inProgress' : 'completed' } : params.item);
+      if (!message) return;
+      const index = state.messages.findIndex((entry) => entry.id === message.id);
+      if (index === -1) state.messages.push(message);
+      else state.messages[index] = message;
       changed();
+    }
+    if (method === 'item/commandExecution/outputDelta') {
+      const tool = state.messages.find((entry) => entry.id === params.itemId && entry.role === 'tool');
+      if (tool) { tool.output += params.delta; changed(); }
     }
     if (method === 'turn/started') { state.busy = true; changed(); }
     if (method === 'turn/completed') {

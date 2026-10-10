@@ -8,6 +8,7 @@ $('name').value = localStorage.getItem('meatless-name') || '';
 $('name').addEventListener('change', () => localStorage.setItem('meatless-name', $('name').value));
 
 function updateComposer() {
+  $('send-status').hidden = !state?.write;
   $('send').disabled = !online || !state?.connected || state.busy || sending;
   $('send-status').textContent = sending ? 'Sending…' : state?.busy ? 'The agent is working. You can keep drafting.'
     : state?.agent === 'Claude Code' ? 'Messages enter the running session. Claude may group messages while busy.'
@@ -26,34 +27,68 @@ function renderBody(element, text) {
   }));
 }
 
+function renderTool(element, message) {
+  if (!element.firstChild) {
+    const summary = document.createElement('summary');
+    summary.append(document.createElement('span'), document.createElement('span'));
+    summary.lastChild.className = 'tool-status';
+    const content = document.createElement('div');
+    content.className = 'tool-content';
+    for (const label of ['Input', 'Output']) {
+      const section = document.createElement('section');
+      const heading = document.createElement('h2');
+      heading.textContent = label;
+      section.append(heading, document.createElement('pre'));
+      content.append(section);
+    }
+    element.append(summary, content);
+  }
+  element.dataset.status = message.status;
+  element.firstChild.firstChild.textContent = message.name;
+  element.firstChild.lastChild.textContent = {
+    inProgress: 'Running…', completed: 'Done', failed: 'Failed', declined: 'Declined',
+  }[message.status];
+  for (const [index, value] of [message.input, message.output].entries()) {
+    const section = element.lastChild.children[index];
+    section.hidden = !value;
+    if (section.lastChild.textContent !== value) section.lastChild.textContent = value;
+  }
+}
+
 function render(next) {
   state = next;
   $('gate').hidden = true;
   $('chat').hidden = false;
   $('title').textContent = state.title;
+  $('title').hidden = false;
+  $('count').hidden = false;
   document.title = `${state.title} · meatless`;
-  $('count').textContent = `${state.messages.length} messages`;
+  $('count').textContent = `${state.messages.filter((message) => message.role !== 'tool').length} messages`;
   $('message-form').hidden = !state.write;
   $('readonly').hidden = state.write;
   $('session-error').textContent = state.error;
   const transcript = $('transcript');
   const stickToBottom = transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight < 100;
   const ids = new Set();
-  for (const message of state.messages) {
+  for (const [index, message] of state.messages.entries()) {
     ids.add(message.id);
     let element = elements.get(message.id);
     if (!element) {
-      element = document.createElement('article');
-      element.className = 'message';
+      element = document.createElement(message.role === 'tool' ? 'details' : 'article');
+      element.className = message.role === 'tool' ? 'message tool-call' : 'message';
       element.dataset.role = message.role;
-      const author = document.createElement('div');
-      author.className = 'message-author';
-      const body = document.createElement('div');
-      body.className = 'message-body';
-      element.append(author, body);
+      if (message.role !== 'tool') {
+        const author = document.createElement('div');
+        author.className = 'message-author';
+        const body = document.createElement('div');
+        body.className = 'message-body';
+        element.append(author, body);
+      }
       elements.set(message.id, element);
-      $('messages').append(element);
     }
+    const current = $('messages').children[index];
+    if (current !== element) $('messages').insertBefore(element, current ?? null);
+    if (message.role === 'tool') { renderTool(element, message); continue; }
     if (element.originalText === message.text) continue;
     element.originalText = message.text;
     const text = message.text.match(/^\s*<channel\b[^>]*>([\s\S]*?)<\/channel>\s*$/)?.[1]?.trim() || message.text;
@@ -70,6 +105,8 @@ function render(next) {
 async function loadSession() {
   const response = await fetch('/api/session');
   if (response.status === 401) {
+    $('title').hidden = true;
+    $('count').hidden = true;
     $('chat').hidden = true;
     $('gate').hidden = false;
     $('passphrase').focus();

@@ -9,7 +9,9 @@
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/" aria-label="meatless home"><span class="brand-icon">m/</span> meatless</a>
+      <a class="brand" href="/" aria-label="meatless home"><span class="brand-icon" aria-hidden="true">m/</span><span class="brand-name">meatless</span></a>
+      <h1 id="title" class="conversation-title" hidden>Shared conversation</h1>
+      <span id="count" hidden></span>
     </header>
 
     <main id="gate" class="gate" hidden>
@@ -24,10 +26,6 @@
     </main>
 
     <main id="chat" class="chat" hidden>
-      <section class="session-heading" aria-label="Session details">
-        <h1 id="title">Shared conversation</h1>
-        <div class="session-details"><span id="count"></span></div>
-      </section>
       <div id="transcript" class="transcript" aria-label="Conversation" tabindex="0">
         <div id="messages" class="messages"></div>
         <div id="empty" class="empty"><span class="empty-mark" aria-hidden="true">↗</span><p>The conversation will appear here.</p></div>
@@ -36,10 +34,10 @@
         <p id="session-error" class="error" role="alert"></p>
         <form id="message-form" class="composer" hidden>
           <label class="visually-hidden" for="message">Message</label>
-          <textarea id="message" placeholder="Add to the conversation…" rows="3" required maxlength="8000"></textarea>
+          <textarea id="message" placeholder="Add to the conversation…" rows="2" required maxlength="8000"></textarea>
           <div class="composer-toolbar">
             <div class="identity"><label for="name">Sending as</label><input id="name" placeholder="Your name" required maxlength="80" autocomplete="nickname"></div>
-            <button id="send" type="submit">Send <span aria-hidden="true">↑</span></button>
+            <button id="send" type="submit" aria-label="Send message"><span aria-hidden="true">↑</span></button>
           </div>
         </form>
         <p id="send-status" class="composer-note" role="status"></p>

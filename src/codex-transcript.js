@@ -1,17 +1,40 @@
 import { EventEmitter } from 'node:events';
 import { glob, readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
+import { codexTool, toolMessage } from './tool-messages.js';
 
 const sessionRoot = join(process.env.CODEX_HOME || join(homedir(), '.codex'), 'sessions');
+
+function savedTool(item, completed) {
+  const status = item.status === 'in_progress' ? 'inProgress' : item.status;
+  switch (item.type) {
+    case 'CommandExecution':
+      return codexTool({ type: 'commandExecution', id: item.id, status,
+        command: item.command.join(' '), aggregatedOutput: item.aggregated_output });
+    case 'McpToolCall':
+      return codexTool({ ...item, type: 'mcpToolCall' });
+    case 'DynamicToolCall':
+      return codexTool({ ...item, type: 'dynamicToolCall', status, contentItems: item.content_items });
+    case 'WebSearch':
+      return codexTool({ ...item, type: 'webSearch', status: completed ? 'completed' : 'inProgress' });
+    case 'FileChange':
+      return toolMessage(item.id, 'Edit files', status ?? (completed ? 'completed' : 'inProgress'),
+        Object.entries(item.changes).map(([path, change]) => `${basename(path)}\n${JSON.stringify(change, null, 2)}`).join('\n\n'),
+        [item.stdout, item.stderr].filter(Boolean).join('\n'));
+  }
+}
 
 export function codexTranscript(contents) {
   const lines = contents.slice(0, contents.lastIndexOf('\n')).split('\n').filter(Boolean);
   const messages = new Map();
   for (const line of lines) {
     const record = JSON.parse(line);
-    if (record.type !== 'event_msg' || record.payload.type !== 'item_completed') continue;
+    if (record.type !== 'event_msg' || !['item_started', 'item_completed'].includes(record.payload.type)) continue;
     const { item } = record.payload;
+    const tool = savedTool(item, record.payload.type === 'item_completed');
+    if (tool) { messages.set(tool.id, tool); continue; }
+    if (record.payload.type !== 'item_completed') continue;
     const role = item.type === 'UserMessage' ? 'user' : item.type === 'AgentMessage' ? 'assistant' : undefined;
     if (!role || item.phase === 'analysis') continue;
     const text = item.content.filter((part) => part.type === (role === 'user' ? 'text' : 'Text'))

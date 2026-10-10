@@ -44,12 +44,29 @@ test('a fresh Codex thread starts without a rollout and streams a collaborator t
   assert.equal(session.state.busy, true);
   assert.match(turnInput[0].text, /^\[Shared-session message from Alex, collaborator\]\n\nUse the existing context\.$/);
   const notify = (method, params) => client.send(JSON.stringify({ method, params: { threadId: thread.id, ...params } }));
+  const command = { id: 'command', type: 'commandExecution', command: 'npm test', status: 'inProgress', aggregatedOutput: '' };
   let changed = once(session, 'change');
+  notify('item/started', { item: command });
+  await changed;
+  assert.equal(session.state.messages[0].status, 'inProgress');
+  changed = once(session, 'change');
+  notify('item/commandExecution/outputDelta', { itemId: 'command', delta: 'Tests passed' });
+  await changed;
+  assert.equal(session.state.messages[0].output, 'Tests passed');
+  changed = once(session, 'change');
+  const completedCommand = { ...command, status: 'completed', aggregatedOutput: 'Tests passed\nDone' };
+  notify('item/completed', { item: completedCommand });
+  await changed;
+  assert.equal(session.state.messages.length, 1);
+  assert.equal(session.state.messages[0].status, 'completed');
+  assert.equal(session.state.messages[0].output, 'Tests passed\nDone');
+  changed = once(session, 'change');
   notify('item/agentMessage/delta', { itemId: 'answer', delta: 'A streamed answer' });
   await changed;
-  assert.equal(session.state.messages[0].text, 'A streamed answer');
+  assert.equal(session.state.messages[1].text, 'A streamed answer');
   thread.turns = [{ items: [
     { id: 'question', type: 'userMessage', content: turnInput },
+    completedCommand,
     { id: 'answer', type: 'agentMessage', text: 'A streamed answer' },
   ] }];
   changed = once(session, 'change');
@@ -57,5 +74,5 @@ test('a fresh Codex thread starts without a rollout and streams a collaborator t
   await changed;
   assert.equal(session.state.busy, false);
   assert.equal(reads, 1);
-  assert.deepEqual(session.state.messages.map((message) => message.role), ['user', 'assistant']);
+  assert.deepEqual(session.state.messages.map((message) => message.role), ['user', 'tool', 'assistant']);
 });
