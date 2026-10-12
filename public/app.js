@@ -1,3 +1,6 @@
+import { marked } from '/vendor/marked.js';
+import DOMPurify from '/vendor/dompurify.js';
+
 const $ = (id) => document.getElementById(id);
 let state;
 let online = false;
@@ -16,15 +19,7 @@ function updateComposer() {
 }
 
 function renderBody(element, text) {
-  const parts = text.split(/```[^\n]*\n([\s\S]*?)```/g);
-  element.replaceChildren(...parts.map((part, index) => {
-    if (index % 2 === 0) return document.createTextNode(part);
-    const pre = document.createElement('pre');
-    const code = document.createElement('code');
-    code.textContent = part.trimEnd();
-    pre.append(code);
-    return pre;
-  }));
+  element.innerHTML = DOMPurify.sanitize(marked.parse(text), { USE_PROFILES: { html: true } });
 }
 
 function renderTool(element, message) {

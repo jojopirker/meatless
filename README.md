@@ -55,7 +55,8 @@ anyone with the URL. For non-interactive use, set `MEATLESS_PASSPHRASE`.
 Passphrases stay in memory; authenticated browsers get a session cookie.
 Names are self-reported labels. Everyone with access has the same permissions.
 
-The command prints a local URL and, for deep links or `--tunnel`, a temporary public URL.
+The command prints a local URL, then reports when the tunnel starts and connects.
+For deep links or `--tunnel`, the share URL appears after the connection is ready.
 The tunnel uses HTTP/2; the chat streams updates over WebSockets.
 Use `--local` to try the interface without a public URL. The default port
 is 8787; override it with `--port`. Stop with Ctrl+C to end sharing. The laptop
@@ -111,6 +112,7 @@ This version does not claim delivery confirmation for channel notifications.
 - One selected conversation per process. Session listing is available only
   through the local CLI.
 - Guest messages include their name and a collaborator label.
+- Messages render Markdown, including headings, lists, links, tables, and code.
 - Codex sends one turn at a time. Claude queues channel messages itself.
 - The page shows user and assistant text, including Claude channel replies.
   Tool calls appear as collapsed rows with their status; expand a row to read

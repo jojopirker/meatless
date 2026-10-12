@@ -4,9 +4,11 @@ import { readFile } from 'node:fs/promises';
 import { WebSocketServer, WebSocket } from 'ws';
 
 const assets = new Map([
-  ['/', ['index.html', 'text/html; charset=utf-8']],
-  ['/app.js', ['app.js', 'text/javascript; charset=utf-8']],
-  ['/style.css', ['style.css', 'text/css; charset=utf-8']],
+  ['/', ['../public/index.html', 'text/html; charset=utf-8']],
+  ['/app.js', ['../public/app.js', 'text/javascript; charset=utf-8']],
+  ['/style.css', ['../public/style.css', 'text/css; charset=utf-8']],
+  ['/vendor/marked.js', [import.meta.resolve('marked'), 'text/javascript; charset=utf-8']],
+  ['/vendor/dompurify.js', [import.meta.resolve('dompurify'), 'text/javascript; charset=utf-8']],
 ]);
 const hash = (text) => createHash('sha256').update(text).digest();
 
@@ -24,7 +26,7 @@ export async function startServer({ session, port = 8787, passphrase = '', write
   const attempts = new Map();
   const passwordHash = hash(passphrase);
   const files = new Map(await Promise.all([...assets].map(async ([path, [file, contentType]]) => [
-    path, { contentType, body: await readFile(new URL(`../public/${file}`, import.meta.url)) },
+    path, { contentType, body: await readFile(new URL(file, import.meta.url)) },
   ])));
   const snapshot = () => {
     const { agent, id, title, messages, busy, connected, error } = session.state;

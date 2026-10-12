@@ -33,7 +33,19 @@ h1 { text-wrap: balance; }
 .messages { display: flex; flex-direction: column; gap: 26px; }
 .message { min-width: 0; max-width: 100%; }
 .message-author { margin-bottom: 7px; font-size: 11px; font-weight: 600; color: var(--muted); }
-.message-body { font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; white-space: pre-wrap; }
+.message-body { font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.message-body > :first-child { margin-top: 0; }
+.message-body > :last-child { margin-bottom: 0; }
+.message-body p, .message-body ul, .message-body ol, .message-body blockquote { margin: 12px 0; }
+.message-body h1, .message-body h2, .message-body h3, .message-body h4, .message-body h5, .message-body h6 { font-size: 16px; line-height: 1.4; margin: 18px 0 8px; }
+.message-body ul, .message-body ol { padding-left: 24px; }
+.message-body a { color: var(--accent); text-underline-offset: 3px; }
+.message-body blockquote { border-left: 3px solid #d9dfd2; padding-left: 14px; color: var(--muted); }
+.message-body code { font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; background: #eef1e9; border-radius: 4px; padding: 2px 4px; }
+.message-body pre code { font: inherit; padding: 0; background: transparent; }
+.message-body table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; margin: 14px 0; }
+.message-body th, .message-body td { border: 1px solid #d9dfd2; padding: 6px 10px; text-align: left; }
+.message-body img { max-width: 100%; height: auto; }
 .message-body pre { background: #eef1e9; border-radius: 9px; padding: 14px 16px; overflow: auto; white-space: pre; font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; margin: 14px 0; }
 .message[data-role="user"] { align-self: flex-end; max-width: 92%; background: #edf1e8; padding: 13px 17px; border-radius: 14px 14px 4px 14px; }
 .message[data-role="user"] .message-author { color: #68725f; }
