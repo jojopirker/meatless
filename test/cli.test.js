@@ -18,11 +18,18 @@ test('a bare Codex deep link loads its history and starts a tunnel automatically
   } } };
   await writeFile(join(home, 'sessions', `rollout-${id}.jsonl`), JSON.stringify(record) + '\n');
   const argsPath = join(directory, 'tunnel-args.json');
+  const connectPath = join(directory, 'connect-tunnel');
   await writeFile(join(directory, 'cloudflared'), `#!/usr/bin/env node
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
+import { setTimeout } from 'node:timers/promises';
 writeFileSync(process.env.TEST_TUNNEL_ARGS, JSON.stringify(process.argv.slice(2)));
-console.error('https://synthetic-test.trycloudflare.com');
-console.error('Registered tunnel connection');
+process.stderr.write('https://synthetic-');
+await setTimeout(20);
+process.stderr.write('test.trycloudflare.com\\n');
+while (!existsSync(process.env.TEST_TUNNEL_CONNECT)) await setTimeout(10);
+process.stderr.write('Registered tunnel con');
+await setTimeout(20);
+process.stderr.write('nection\\n');
 setInterval(() => {}, 1000);
 `, { mode: 0o755 });
   // The temporary executable uses ES modules, just like the CLI.
@@ -34,7 +41,7 @@ setInterval(() => {}, 1000);
   const child = spawn(process.execPath, [fileURLToPath(new URL('../bin/meatless.js', import.meta.url)),
     `codex://threads/${id}`, '--port', String(port)], { env: {
       ...process.env, CODEX_HOME: home, MEATLESS_PASSPHRASE: '',
-      PATH: directory + ':' + process.env.PATH, TEST_TUNNEL_ARGS: argsPath,
+      PATH: directory + ':' + process.env.PATH, TEST_TUNNEL_ARGS: argsPath, TEST_TUNNEL_CONNECT: connectPath,
     }, stdio: ['ignore', 'ignore', 'pipe'] });
   const exited = new Promise((resolve) => child.once('exit', resolve));
   t.after(async () => { child.kill('SIGTERM'); await exited; });
@@ -44,9 +51,19 @@ setInterval(() => {}, 1000);
     child.once('exit', (code) => reject(new Error(`CLI exited with ${code}: ${output}`)));
     child.stderr.on('data', (chunk) => {
       output += chunk;
+      if (output.includes('Tunnel URL assigned. Connecting to Cloudflare…')) resolve();
+    });
+  });
+  assert.match(output, /Starting Cloudflare Tunnel…/);
+  assert.equal(output.includes('Share URL:'), false);
+  await writeFile(connectPath, 'connect');
+  await new Promise((resolve) => {
+    if (output.includes('Share URL: https://synthetic-test.trycloudflare.com')) return resolve();
+    child.stderr.on('data', () => {
       if (output.includes('Share URL: https://synthetic-test.trycloudflare.com')) resolve();
     });
   });
+  assert.match(output, /Cloudflare Tunnel connected\.\s+Share URL:/);
   const history = await fetch(`http://127.0.0.1:${port}/api/session`).then((response) => response.json());
   assert.equal(history.id, id);
   assert.equal(history.messages[0].text, 'The selected conversation');
