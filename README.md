@@ -1,6 +1,6 @@
 # meatless
 
-Share one local Codex or Claude Code conversation through a small web chat.
+Share one local Codex, Claude Code, or T3 Code conversation through a small web chat.
 
 The first version uses Node.js, plain browser JavaScript, and Cloudflare Tunnel.
 Guests can read the selected conversation. Enable writing to let them send
@@ -12,8 +12,8 @@ Example conversation with collaborator messages enabled.
 
 ## Run it
 
-Requires Node.js 24+, an installed and authenticated `codex` or `claude` CLI,
-and `cloudflared` when using `--tunnel`.
+Requires Node.js 24+, an installed and authenticated `codex` or `claude` CLI
+(or the T3 Code app for its threads), and `cloudflared` when using `--tunnel`.
 
 ```sh
 brew install cloudflared
@@ -28,10 +28,12 @@ npx meatless codex://threads/<session-id> --write --passphrase
 # Find an existing conversation.
 npm start -- list codex
 npm start -- list claude
+npm start -- list t3code
 
 # Share a conversation for reading, with a passphrase.
 npm start -- codex <session-id> --passphrase --tunnel
 npm start -- claude <session-id> --passphrase --tunnel
+npm start -- t3code <thread-id> --passphrase --tunnel
 
 # Let collaborators contribute.
 npm start -- codex <session-id> --write --passphrase --tunnel
@@ -107,6 +109,21 @@ If Claude reports that channels are unavailable, guest messages will not
 arrive even though the MCP server is connected. Check the startup notice.
 This version does not claim delivery confirmation for channel notifications.
 
+## T3 Code
+
+T3 Code is a desktop app that runs providers such as Codex, Claude Code, and
+Muse, and stores every thread in a local database. Sharing watches the
+selected thread in that database without starting another runtime, so you
+keep working in T3 Code while guests follow along. T3 Code does not need to
+stay open; the page shows the saved thread and any updates once it changes
+again. Set `T3_HOME` if the app data lives somewhere other than `~/.t3`.
+
+Sharing a T3 Code thread is read-only for now, so `--write` and `new` are
+rejected with an explanation. Sending guest messages would have to go
+through T3 Code's own authenticated server rather than a transcript meatless
+can append to. The thread's provider does not matter: the same command
+shares threads from any provider T3 Code ran.
+
 ## Scope
 
 - One selected conversation per process. Session listing is available only
@@ -117,11 +134,12 @@ This version does not claim delivery confirmation for channel notifications.
 - The page shows user and assistant text, including Claude channel replies.
   Tool calls appear as collapsed rows with their status; expand a row to read
   its input and text output. Codex command execution, file changes, MCP calls,
-  dynamic tools, and web searches are supported, along with Claude tool calls.
+  dynamic tools, and web searches are supported, along with Claude tool calls
+  and the T3 Code equivalents, including delegated subagent tasks.
   Tool inputs and outputs are shared with everyone who can access the page.
   Reasoning, owner context, and tool-result images are omitted. Approvals stay
   in the owner's terminal.
-- No database or hosted backend. Codex and Claude retain their own transcripts.
+- No database or hosted backend. Codex, Claude, and T3 Code retain their own transcripts.
 - No attachments, account system, or session branching.
 
 ```sh
@@ -129,9 +147,10 @@ npm test
 ```
 
 The tests exercise access control, WebSocket updates, Codex JSON-RPC streaming,
-transcript filtering, and the Claude channel over a real MCP transport,
-without calling a model.
+transcript filtering, the Claude channel over a real MCP transport, and
+T3 Code thread conversion against a fixture database, without calling a model.
 
 Protocol references: [Codex app-server](https://learn.chatgpt.com/docs/app-server),
 [Claude channels](https://code.claude.com/docs/en/channels-reference),
-[Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
+[Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/),
+[T3 Code](https://github.com/pingdotgg/t3code).

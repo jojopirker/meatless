@@ -14,9 +14,10 @@ import { startTunnel } from '../src/tunnel.js';
 
 const help = `Usage:
   meatless codex://threads/<session-id> [options]
-  meatless list codex|claude [--cwd <directory>]
+  meatless list codex|claude|t3code [--cwd <directory>]
   meatless codex <session-id>|new [options]
   meatless claude <session-id>|new [options]
+  meatless t3code <thread-id> [options]
 
 Options:
   --write          Let guests send attributed messages. Default: read-only.
@@ -35,6 +36,8 @@ in this process; use the shared page instead of the original Codex window.
 Claude: read-only sharing watches the existing transcript. With --write,
 close the original Claude session first; this command resumes it with the
 sharing channel enabled. Tool approvals remain in your terminal.
+T3 Code: sharing watches the thread in T3 Code's local database while you
+keep working there. It is read-only; guests cannot send messages yet.
 `;
 
 async function ask(question, secret = false) {
@@ -82,17 +85,24 @@ async function main() {
   options.tunnel = !values.local && (values.tunnel || Boolean(deepLink));
   if (!Number.isInteger(options.port) || options.port < 1 || options.port > 65535) throw new Error('Port must be between 1 and 65535.');
   if (command === 'list') {
-    if (!['codex', 'claude'].includes(argument)) throw new Error('Choose list codex or list claude.');
+    if (!['codex', 'claude', 't3code'].includes(argument)) throw new Error('Choose list codex, list claude, or list t3code.');
     const sessions = argument === 'codex'
       ? await listCodexSessions({ connect: options.connect, cwd: values.cwd && options.cwd })
-      : await listClaudeSessions();
+      : argument === 'claude' ? await listClaudeSessions()
+      : await (await import('../src/t3code.js')).listT3Sessions();
     for (const session of sessions.filter((entry) => !values.cwd || entry.cwd === options.cwd)) {
       console.log(`${session.id}  ${session.title.replace(/\s+/g, ' ').slice(0, 90)}\n  ${session.cwd}`);
     }
-    if (!sessions.length) console.error('No sessions found. Start one with: meatless ' + argument + ' new --write');
+    if (!sessions.length) console.error(argument === 't3code'
+      ? 'No threads found. Start one in T3 Code first.'
+      : 'No sessions found. Start one with: meatless ' + argument + ' new --write');
     return;
   }
-  if (!['codex', 'claude', 'claude-channel'].includes(command) || !argument) throw new Error(help);
+  if (!['codex', 'claude', 'claude-channel', 't3code'].includes(command) || !argument) throw new Error(help);
+  if (command === 't3code') {
+    if (argument === 'new') throw new Error('Start new threads in T3 Code, then share one with: meatless t3code <thread-id>');
+    if (values.write) throw new Error('T3 Code sharing is read-only for now. Drop --write; guests can follow along while you work in T3 Code.');
+  }
   options.id = argument === 'new' && command !== 'codex' ? randomUUID() : argument;
   if (argument === 'new' && !options.write) throw new Error('Use --write when starting a new session.');
   let passphrase = process.env.MEATLESS_PASSPHRASE || '';
@@ -126,7 +136,8 @@ async function main() {
   }
 
   const session = command === 'codex' ? await openCodex({ ...options, approve })
-    : command === 'claude' ? await openClaudeTranscript(options) : await openClaudeChannel(options);
+    : command === 'claude' ? await openClaudeTranscript(options)
+    : command === 't3code' ? await (await import('../src/t3code.js')).openT3(options) : await openClaudeChannel(options);
   const server = await startServer({ ...options, session, passphrase }).catch((error) => {
     session.close(); throw error;
   });

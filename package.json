@@ -2,7 +2,7 @@
   "name": "meatless",
   "version": "0.1.0",
   "type": "module",
-  "description": "Share a local Codex or Claude Code conversation with a coworker.",
+  "description": "Share a local Codex, Claude Code, or T3 Code conversation with a coworker.",
   "bin": {
     "meatless": "bin/meatless.js"
   },
